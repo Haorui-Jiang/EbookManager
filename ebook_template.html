@@ -11,6 +11,7 @@
             --primary-color: #2c3e50;
             --secondary-color: #6c757d;
             --accent-color: #3498db;
+            --sidebar-bg: #f8f9fa;
         }
 
         body {
@@ -65,11 +66,12 @@
             bottom: 0;
             width: 300px;
             padding: 20px;
-            background-color: white;
+            background-color: var(--sidebar-bg);
             color: #000;
             overflow-y: auto;
             border-right: 1px solid #dee2e6;
             z-index: 1000;
+            transition: all 0.3s ease;
         }
 
         .category-title {
@@ -96,6 +98,42 @@
 
         .all-books a:hover {
             text-decoration: underline;
+        }
+
+        .category-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .category-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .category-card.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .category-name {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-count {
+            background-color: var(--secondary-color);
+            color: white;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: auto;
         }
 
         /* 电子书卡片样式 */
@@ -242,18 +280,18 @@
             <div class="all-books">
                 <a href="javascript:void(0)" onclick="showAllBooks()">
                     <i class="fas fa-th-list"></i>
-                    所有书籍
+                    所有电子书
                 </a>
             </div>
 
-            <div id="categoryTree">
-                <!-- 分类树将通过JavaScript动态生成 -->
+            <div id="categoryList">
+                <!-- 分类卡片将通过JavaScript动态生成 -->
             </div>
         </div>
 
         <!-- 主内容区域 -->
         <div class="content">
-            <!-- 搜索</div>功能 -->
+            <!-- 搜索框功能 -->
             <div class="search-header">
                 <div class="search-label">
                     <i class="fas fa-search"></i>
@@ -303,7 +341,7 @@
                     <div class="meta-item">
                         <span class="meta-title">出版社:</span>
                         <span>${ebook.publisher}</span>
-                        <span style="margin-left: 15px;"><span class="meta-title">出版日期:</span> ${ebook.publish_date}</span>
+                        <span style="margin-left: 15px;"><span class="meta-title">出版年份:</span> ${ebook.publish_year}</span>
                     </div>
                 </div>
 
@@ -336,7 +374,7 @@
             ebookList.innerHTML = '';
             
             if (!searchTerm) {
-                // 如果没有搜索词，显示当前分类下的书籍
+                // 如果没有搜索词，显示当前分类下的电子书
                 if (currentEbooks.length === 0) {
                     ebookList.innerHTML = '<div class="alert alert-info">没有电子书</div>';
                     return;
@@ -347,7 +385,7 @@
                     ebookList.appendChild(card);
                 });
             } else {
-                // 如果有搜索词，全局搜索所有书籍
+                // 如果有搜索词，全局搜索所有电子书
                 const searchResults = allEbooks.filter(ebook => 
                     ebook.name.toLowerCase().includes(searchTerm) ||
                     ebook.author.toLowerCase().includes(searchTerm) ||
@@ -374,89 +412,46 @@
             });
         });
 
-        // 构建分类树
-        function buildCategoryTree() {
-            const categoryTreeElement = document.getElementById('categoryTree');
-            categoryTreeElement.innerHTML = '';
+        // 构建分类列表
+        function buildCategoryList() {
+            const categoryListElement = document.getElementById('categoryList');
+            categoryListElement.innerHTML = '';
             
-            // 创建根级分类
-            const rootCategories = {};
-            allEbooks.forEach(ebook => {
-                const parts = ebook.category.split('>');
-                let current = rootCategories;
-                for (const part of parts) {
-                    const trimmedPart = part.trim();
-                    if (!current[trimmedPart]) {
-                        current[trimmedPart] = {};
-                    }
-                    current = current[trimmedPart];
-                }
+            // 获取所有唯一的分类
+            const categories = [...new Set(allEbooks.map(ebook => ebook.category))];
+            
+            // 按字母顺序排序
+            categories.sort();
+            
+            // 渲染分类卡片
+            categories.forEach(category => {
+                const categoryCount = allEbooks.filter(ebook => ebook.category === category).length;
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'category-card';
+                categoryCard.innerHTML = `
+                    <div class="category-name">
+                        <i class="fas fa-folder me-2"></i>
+                        ${category}
+                        <span class="category-count">${categoryCount}</span>
+                    </div>
+                `;
+                categoryCard.addEventListener('click', function() {
+                    filterEbooksByCategory(category);
+                    
+                    // 更新活跃状态
+                    document.querySelectorAll('.category-card').forEach(card => {
+                        card.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+                
+                categoryListElement.appendChild(categoryCard);
             });
-
-            // 渲染分类树
-            function renderCategories(parentElement, categories, currentPath = '') {
-                for (const category in categories) {
-                    if (!categories[category] || Object.keys(categories[category]).length === 0) {
-                        // 叶子节点
-                        const categoryLink = document.createElement('div');
-                        categoryLink.className = 'mb-2';
-                        categoryLink.innerHTML = `
-                            <a href="javascript:void(0)" 
-                               class="text-decoration-none text-dark"
-                               onclick="filterEbooksByCategory('${currentPath}${currentPath ? ' > ' : ''}${category}')">
-                                <i class="fas fa-caret-right me-2"></i>
-                                ${currentPath ? '' : ''}${category}
-                            </a>
-                        `;
-                        parentElement.appendChild(categoryLink);
-                    } else {
-                        // 父节点
-                        const categoryItem = document.createElement('div');
-                        categoryItem.className = 'mb-2';
-                        categoryItem.innerHTML = `
-                            <a href="javascript:void(0)" 
-                               class="text-decoration-none text-dark"
-                               onclick="toggleCategory('${category}', this)">
-                                <i class="fas fa-chevron-down me-2"></i>
-                                ${currentPath ? '' : ''}${category}
-                            </a>
-                            <div class="ms-4 mt-1" id="subCategory-${category.replace(/\s+/g, '-')}" style="display: none;"></div>
-                        `;
-                        parentElement.appendChild(categoryItem);
-                        
-                        // 递归渲染子分类
-                        const subContainer = document.getElementById(`subCategory-${category.replace(/\s+/g, '-')}`);
-                        renderCategories(subContainer, categories[category], 
-                            currentPath ? `${currentPath} > ${category}` : category);
-                    }
-                }
-            }
-            
-            renderCategories(categoryTreeElement, rootCategories);
-        }
-
-        // 切换分类显示/隐藏
-        function toggleCategory(category, element) {
-            const icon = element.querySelector('i');
-            const subContainer = document.getElementById(`subCategory-${category.replace(/\s+/g, '-')}`);
-            
-            if (icon.classList.contains('fa-chevron-down')) {
-                icon.classList.remove('fa-chevron-down');
-                icon.classList.add('fa-chevron-right');
-                subContainer.style.display = 'none';
-            } else {
-                icon.classList.remove('fa-chevron-right');
-                icon.classList.add('fa-chevron-down');
-                subContainer.style.display = 'block';
-            }
         }
 
         // 按分类筛选电子书
-        function filterEbooksByCategory(categoryPath) {
-            currentEbooks = allEbooks.filter(ebook => 
-                ebook.category === categoryPath || 
-                ebook.category.startsWith(`${categoryPath} > `)
-            );
+        function filterEbooksByCategory(category) {
+            currentEbooks = allEbooks.filter(ebook => ebook.category === category);
             
             const ebookList = document.getElementById('ebookList');
             ebookList.innerHTML = '';
@@ -480,7 +475,7 @@
             });
         }
 
-        // 显示所有书籍
+        // 显示所有电子书
         function showAllBooks() {
             currentEbooks = [...allEbooks];
             
@@ -504,6 +499,11 @@
                     window.open(filePath, '_blank');
                 });
             });
+            
+            // 重置分类卡片的活跃状态
+            document.querySelectorAll('.category-card').forEach(card => {
+                card.classList.remove('active');
+            });
         }
 
         // 返回顶部功能
@@ -524,17 +524,9 @@
             });
         });
 
-        // 打开电子书功能
-        document.querySelectorAll('.open-ebook').forEach(button => {
-            button.addEventListener('click', function() {
-                const filePath = this.getAttribute('data-file');
-                window.open(filePath, '_blank');
-            });
-        });
-
         // 初始化
         window.onload = function() {
-            buildCategoryTree();
+            buildCategoryList();
             showAllBooks();
         };
     </script>

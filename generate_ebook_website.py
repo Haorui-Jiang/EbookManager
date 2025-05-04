@@ -14,7 +14,7 @@ def read_ebooks_from_excel(file_path):
         name = row["书名"]
         author = row["作者"]
         publisher = row["出版社"]
-        publish_date = row["出版日期"]
+        publish_year = row["出版年份"]
         category = row["类别"]
         tags = row["标签"]
         
@@ -33,7 +33,7 @@ def read_ebooks_from_excel(file_path):
             "name": name,
             "author": author,
             "publisher": publisher,
-            "publish_date": publish_date,
+            "publish_year": publish_year,
             "category": category,
             "tags": tags,
             "storage_location": category,

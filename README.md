@@ -14,7 +14,7 @@
 
 ## 使用教程
 
-1. 准备包含电子书信息的 Excel 文件 (`ebooks.xlsx`)，确保其包含以下列：书名、作者、出版社、出版日期、类别和标签，并将其与 `generate_ebook_website.py` 和 `ebook_template.html` 放置在同一目录下。
+1. 准备包含电子书信息的 Excel 文件 (`ebooks.xlsx`)，确保其包含以下列：书名、作者、出版社、出版年份、类别和标签，并将其与 `generate_ebook_website.py` 和 `ebook_template.html` 放置在同一目录下。
 
 2. 根据书籍类别及名称，将书籍 PDF 文件保存至正确的文件夹。例如【地理】分类的《地理信息系统》一书应以【地理信息系统.pdf】的名称保存至与代码文件同一目录下的【地理】文件夹中。
 
